@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.fetchbeebackend.mapper.BalanceRecordMapper">
+    
+    <!-- 结果映射 -->
+    <resultMap id="BalanceRecordResultMap" type="com.example.fetchbeebackend.entity.BalanceRecord">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="amount" property="amount"/>
+        <result column="balance_before" property="balanceBefore"/>
+        <result column="balance_after" property="balanceAfter"/>
+        <result column="type" property="type"/>
+        <result column="order_id" property="orderId"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+    
+    <!-- 插入余额记录 -->
+    <insert id="insert" parameterType="com.example.fetchbeebackend.entity.BalanceRecord"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO balance_record (user_id, amount, balance_before, balance_after, type, order_id, remark)
+        VALUES (#{userId}, #{amount}, #{balanceBefore}, #{balanceAfter}, #{type}, #{orderId}, #{remark})
+    </insert>
+    
+    <!-- 根据用户ID查询余额记录列表 -->
+    <select id="findByUserId" resultMap="BalanceRecordResultMap">
+        SELECT * FROM balance_record 
+        WHERE user_id = #{userId}
+        ORDER BY create_time DESC
+    </select>
+    
+</mapper>
+

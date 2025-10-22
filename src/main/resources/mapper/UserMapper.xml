@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.fetchbeebackend.mapper.UserMapper">
+    
+    <!-- 结果映射 -->
+    <resultMap id="UserResultMap" type="com.example.fetchbeebackend.entity.User">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="phone" property="phone"/>
+        <result column="address" property="address"/>
+        <result column="balance" property="balance"/>
+        <result column="avatar" property="avatar"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+    
+    <!-- 根据用户名查询用户 -->
+    <select id="findByUsername" resultMap="UserResultMap">
+        SELECT * FROM user WHERE username = #{username}
+    </select>
+    
+    <!-- 根据ID查询用户 -->
+    <select id="findById" resultMap="UserResultMap">
+        SELECT * FROM user WHERE id = #{id}
+    </select>
+    
+    <!-- 插入用户 -->
+    <insert id="insert" parameterType="com.example.fetchbeebackend.entity.User" 
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (username, password, phone, address, balance, avatar, status)
+        VALUES (#{username}, #{password}, #{phone}, #{address}, #{balance}, #{avatar}, #{status})
+    </insert>
+    
+    <!-- 更新用户信息 -->
+    <update id="update" parameterType="com.example.fetchbeebackend.entity.User">
+        UPDATE user
+        <set>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 更新密码 -->
+    <update id="updatePassword">
+        UPDATE user SET password = #{password} WHERE id = #{id}
+    </update>
+    
+    <!-- 更新余额 -->
+    <update id="updateBalance">
+        UPDATE user SET balance = #{balance} WHERE id = #{id}
+    </update>
+    
+</mapper>
+
