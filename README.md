@@ -3,8 +3,8 @@
 一个校园快递代取系统的后端服务，基于Spring Boot + MyBatis + Redis开发。
 
 ## 系统效果图
-(./docs/images/Login.png)
-(./docs/images/OrderDetails.png)
+![登录页面](./docs/images/Login.png)
+![订单详情页面](./docs/images/OrderDetails.png)
 
 ## 技术栈
 
