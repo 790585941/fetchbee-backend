@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.fetchbeebackend.mapper.OrderMapper">
+    
+    <!-- 结果映射 -->
+    <resultMap id="OrderResultMap" type="com.example.fetchbeebackend.entity.Order">
+        <id column="id" property="id"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="publisher_id" property="publisherId"/>
+        <result column="receiver_id" property="receiverId"/>
+        <result column="express_company" property="expressCompany"/>
+        <result column="pickup_code" property="pickupCode"/>
+        <result column="description" property="description"/>
+        <result column="pickup_address" property="pickupAddress"/>
+        <result column="delivery_address" property="deliveryAddress"/>
+        <result column="reward" property="reward"/>
+        <result column="deadline" property="deadline"/>
+        <result column="status" property="status"/>
+        <result column="actual_reward" property="actualReward"/>
+        <result column="complete_time" property="completeTime"/>
+        <result column="cancel_reason" property="cancelReason"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+    
+    <!-- 插入订单 -->
+    <insert id="insert" parameterType="com.example.fetchbeebackend.entity.Order"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `order` (order_no, publisher_id, express_company, pickup_code, description, 
+                            pickup_address, delivery_address, reward, deadline, status)
+        VALUES (#{orderNo}, #{publisherId}, #{expressCompany}, #{pickupCode}, #{description},
+                #{pickupAddress}, #{deliveryAddress}, #{reward}, #{deadline}, #{status})
+    </insert>
+    
+    <!-- 根据ID查询订单 -->
+    <select id="findById" resultMap="OrderResultMap">
+        SELECT * FROM `order` WHERE id = #{id}
+    </select>
+    
+    <!-- 根据订单号查询订单 -->
+    <select id="findByOrderNo" resultMap="OrderResultMap">
+        SELECT * FROM `order` WHERE order_no = #{orderNo}
+    </select>
+    
+    <!-- 查询待接单订单列表 -->
+    <select id="findPendingOrders" resultMap="OrderResultMap">
+        SELECT * FROM `order` 
+        WHERE status = 1
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 查询用户发布的订单列表 -->
+    <select id="findByPublisherId" resultMap="OrderResultMap">
+        SELECT * FROM `order` 
+        WHERE publisher_id = #{publisherId}
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 查询用户接的订单列表 -->
+    <select id="findByReceiverId" resultMap="OrderResultMap">
+        SELECT * FROM `order` 
+        WHERE receiver_id = #{receiverId}
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 更新订单状态 -->
+    <update id="updateStatus">
+        UPDATE `order` SET status = #{status} WHERE id = #{id}
+    </update>
+    
+    <!-- 接单 -->
+    <update id="acceptOrder">
+        UPDATE `order` 
+        SET receiver_id = #{receiverId}, status = 2
+        WHERE id = #{id} AND status = 1
+    </update>
+    
+    <!-- 完成订单 -->
+    <update id="completeOrder">
+        UPDATE `order` 
+        SET status = 3, 
+            actual_reward = #{actualReward},
+            complete_time = #{completeTime}
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 取消订单 -->
+    <update id="cancelOrder">
+        UPDATE `order` 
+        SET status = 4, cancel_reason = #{cancelReason}
+        WHERE id = #{id}
+    </update>
+    
+</mapper>
+

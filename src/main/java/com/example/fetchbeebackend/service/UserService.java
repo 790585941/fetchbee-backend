@@ -54,7 +54,7 @@ public class UserService {
         // 2. 创建用户
         User user = new User();
         user.setUsername(request.getUsername());
-        // 使用MD5加密密码（实际项目建议使用BCrypt）
+        // 使用MD5加密密码
         user.setPassword(encryptPassword(request.getPassword()));
         user.setBalance(BigDecimal.ZERO);
         user.setStatus(1);

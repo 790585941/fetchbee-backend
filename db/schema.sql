@@ -41,10 +41,40 @@ CREATE TABLE IF NOT EXISTS `balance_record` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='余额变动记录表';
 
 -- ============================================
+-- 订单表
+-- ============================================
+CREATE TABLE IF NOT EXISTS `order` (
+    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '订单ID',
+    `order_no` VARCHAR(32) NOT NULL UNIQUE COMMENT '订单号',
+    `publisher_id` BIGINT NOT NULL COMMENT '发布者ID',
+    `receiver_id` BIGINT DEFAULT NULL COMMENT '接单者ID',
+    `express_company` VARCHAR(50) DEFAULT NULL COMMENT '快递公司',
+    `pickup_code` VARCHAR(50) NOT NULL COMMENT '取件码',
+    `description` VARCHAR(500) DEFAULT NULL COMMENT '快递描述',
+    `pickup_address` VARCHAR(255) NOT NULL COMMENT '取件地址',
+    `delivery_address` VARCHAR(255) NOT NULL COMMENT '送达地址（发布者地址）',
+    `reward` DECIMAL(10, 2) NOT NULL COMMENT '报酬金额',
+    `deadline` DATETIME NOT NULL COMMENT '截止时间',
+    `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1-待接单，2-已接单，3-已完成，4-已取消',
+    `actual_reward` DECIMAL(10, 2) DEFAULT NULL COMMENT '实际支付金额（超时可能打折）',
+    `complete_time` DATETIME DEFAULT NULL COMMENT '完成时间',
+    `cancel_reason` VARCHAR(255) DEFAULT NULL COMMENT '取消原因',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX `idx_order_no` (`order_no`),
+    INDEX `idx_publisher_id` (`publisher_id`),
+    INDEX `idx_receiver_id` (`receiver_id`),
+    INDEX `idx_status` (`status`),
+    INDEX `idx_create_time` (`create_time`),
+    FOREIGN KEY (`publisher_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`receiver_id`) REFERENCES `user`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单表';
+
+-- ============================================
 -- 初始化测试数据（可选）
 -- ============================================
--- 插入测试用户（密码为：123456，已用BCrypt加密）
+-- 插入测试用户（密码为：123456，MD5加密：e10adc3949ba59abbe56e057f20f883e）
 -- INSERT INTO `user` (`username`, `password`, `phone`, `address`, `balance`) VALUES
--- ('testuser1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5E', '13800138001', '一号宿舍楼101', 100.00),
--- ('testuser2', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5E', '13800138002', '二号宿舍楼202', 50.00);
+-- ('testuser1', 'e10adc3949ba59abbe56e057f20f883e', '13800138001', '一号宿舍楼101', 100.00),
+-- ('testuser2', 'e10adc3949ba59abbe56e057f20f883e', '13800138002', '二号宿舍楼202', 50.00);
 

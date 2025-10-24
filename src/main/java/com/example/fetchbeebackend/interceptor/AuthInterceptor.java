@@ -30,6 +30,11 @@ public class AuthInterceptor implements HandlerInterceptor {
     
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        // 0. OPTIONS预检请求直接放行
+        if ("OPTIONS".equals(request.getMethod())) {
+            return true;
+        }
+        
         // 1. 从请求头获取Token
         String token = request.getHeader("Authorization");
         
