@@ -56,8 +56,21 @@ public class OrderService {
         }
         
         // 3. 检查截止时间是否合理
-        if (request.getDeadline().isBefore(LocalDateTime.now())) {
-            throw new BusinessException(ResultCode.PARAM_ERROR, "截止时间不能早于当前时间");
+        LocalDateTime now = LocalDateTime.now();
+        if (!request.getDeadline().isAfter(now)) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "截止时间必须晚于当前时间");
+        }
+        
+        // 检查截止时间是否至少在15分钟之后
+        LocalDateTime minDeadline = now.plusMinutes(15);
+        if (request.getDeadline().isBefore(minDeadline)) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "截止时间必须至少在15分钟之后");
+        }
+        
+        // 检查截止时间是否在合理范围内（不超过30天）
+        LocalDateTime maxDeadline = now.plusDays(30);
+        if (request.getDeadline().isAfter(maxDeadline)) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "截止时间不能超过30天");
         }
         
         // 4. 创建订单
@@ -119,8 +132,90 @@ public class OrderService {
     }
     
     /**
-     * 完成订单
+     * 标记送达（接单者操作）
      */
+    @Transactional(rollbackFor = Exception.class)
+    public void deliverOrder(Long orderId, Long receiverId) {
+        // 1. 查询订单
+        Order order = orderMapper.findById(orderId);
+        if (order == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "订单不存在");
+        }
+        
+        // 2. 检查订单状态
+        if (!order.getStatus().equals(OrderStatus.ACCEPTED.getCode())) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "订单状态不正确，当前状态：" + getStatusDesc(order.getStatus()));
+        }
+        
+        // 3. 检查是否是接单者本人
+        if (!order.getReceiverId().equals(receiverId)) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "只有接单者才能标记送达");
+        }
+        
+        // 4. 更新订单状态为待确认
+        int result = orderMapper.deliverOrder(orderId, LocalDateTime.now());
+        if (result <= 0) {
+            throw new BusinessException("标记送达失败");
+        }
+        
+        log.info("标记送达成功：orderId={}, receiverId={}", orderId, receiverId);
+    }
+    
+    /**
+     * 确认收货（发布者操作）
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void confirmOrder(Long orderId, Long publisherId) {
+        // 1. 查询订单
+        Order order = orderMapper.findById(orderId);
+        if (order == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "订单不存在");
+        }
+        
+        // 2. 检查订单状态
+        if (!order.getStatus().equals(OrderStatus.DELIVERED.getCode())) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "订单状态不正确，当前状态：" + getStatusDesc(order.getStatus()));
+        }
+        
+        // 3. 检查是否是发布者本人
+        if (!order.getPublisherId().equals(publisherId)) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "只有发布者才能确认收货");
+        }
+        
+        // 4. 判断是否超时，计算实际支付金额
+        LocalDateTime now = LocalDateTime.now();
+        BigDecimal actualReward;
+        boolean isOvertime = now.isAfter(order.getDeadline());
+        
+        if (isOvertime) {
+            // 超时完成，按80%支付
+            actualReward = order.getReward().multiply(new BigDecimal("0.8"));
+            log.warn("订单超时完成：orderId={}, 原报酬={}, 实际支付={}", 
+                    orderId, order.getReward(), actualReward);
+        } else {
+            // 按时完成，全额支付
+            actualReward = order.getReward();
+        }
+        
+        // 5. 更新订单状态为已完成
+        int result = orderMapper.completeOrder(orderId, actualReward, now);
+        if (result <= 0) {
+            throw new BusinessException("确认收货失败");
+        }
+        
+        // 6. 给接单者转账
+        balanceService.transfer(order.getReceiverId(), actualReward, orderId, 
+                "完成订单收入：" + order.getOrderNo() + (isOvertime ? "（超时）" : ""));
+        
+        log.info("确认收货成功：orderId={}, publisherId={}, receiverId={}, actualReward={}, isOvertime={}", 
+                orderId, publisherId, order.getReceiverId(), actualReward, isOvertime);
+    }
+    
+    /**
+     * 完成订单（已废弃，保留兼容性）
+     * @deprecated 使用 deliverOrder 和 confirmOrder 替代
+     */
+    @Deprecated
     @Transactional(rollbackFor = Exception.class)
     public void completeOrder(Long orderId, Long receiverId) {
         // 1. 查询订单

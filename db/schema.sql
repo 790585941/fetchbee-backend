@@ -55,8 +55,9 @@ CREATE TABLE IF NOT EXISTS `order` (
     `delivery_address` VARCHAR(255) NOT NULL COMMENT '送达地址（发布者地址）',
     `reward` DECIMAL(10, 2) NOT NULL COMMENT '报酬金额',
     `deadline` DATETIME NOT NULL COMMENT '截止时间',
-    `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1-待接单，2-已接单，3-已完成，4-已取消',
+    `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1-待接单，2-已接单，3-待确认，4-已完成，5-已取消',
     `actual_reward` DECIMAL(10, 2) DEFAULT NULL COMMENT '实际支付金额（超时可能打折）',
+    `deliver_time` DATETIME DEFAULT NULL COMMENT '送达时间（接单者标记送达的时间）',
     `complete_time` DATETIME DEFAULT NULL COMMENT '完成时间',
     `cancel_reason` VARCHAR(255) DEFAULT NULL COMMENT '取消原因',
     `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -65,6 +66,7 @@ CREATE TABLE IF NOT EXISTS `order` (
     INDEX `idx_publisher_id` (`publisher_id`),
     INDEX `idx_receiver_id` (`receiver_id`),
     INDEX `idx_status` (`status`),
+    INDEX `idx_deliver_time` (`deliver_time`),
     INDEX `idx_create_time` (`create_time`),
     FOREIGN KEY (`publisher_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`receiver_id`) REFERENCES `user`(`id`) ON DELETE SET NULL

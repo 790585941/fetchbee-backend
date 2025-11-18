@@ -18,6 +18,7 @@
         <result column="deadline" property="deadline"/>
         <result column="status" property="status"/>
         <result column="actual_reward" property="actualReward"/>
+        <result column="deliver_time" property="deliverTime"/>
         <result column="complete_time" property="completeTime"/>
         <result column="cancel_reason" property="cancelReason"/>
         <result column="create_time" property="createTime"/>
@@ -76,10 +77,17 @@
         WHERE id = #{id} AND status = 1
     </update>
     
+    <!-- 标记送达 -->
+    <update id="deliverOrder">
+        UPDATE `order` 
+        SET status = 3, deliver_time = #{deliverTime}
+        WHERE id = #{id} AND status = 2
+    </update>
+    
     <!-- 完成订单 -->
     <update id="completeOrder">
         UPDATE `order` 
-        SET status = 3, 
+        SET status = 4, 
             actual_reward = #{actualReward},
             complete_time = #{completeTime}
         WHERE id = #{id}
@@ -88,9 +96,16 @@
     <!-- 取消订单 -->
     <update id="cancelOrder">
         UPDATE `order` 
-        SET status = 4, cancel_reason = #{cancelReason}
+        SET status = 5, cancel_reason = #{cancelReason}
         WHERE id = #{id}
     </update>
+    
+    <!-- 查询待确认且超过指定时间的订单列表 -->
+    <select id="findDeliveredOrdersBeforeTime" resultMap="OrderResultMap">
+        SELECT * FROM `order` 
+        WHERE status = 3 AND deliver_time &lt; #{beforeTime}
+        ORDER BY deliver_time ASC
+    </select>
     
 </mapper>
 

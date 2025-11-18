@@ -16,14 +16,19 @@ public enum OrderStatus {
     ACCEPTED(2, "已接单"),
     
     /**
+     * 待确认（接单者已送达，等待发布者确认）
+     */
+    DELIVERED(3, "待确认"),
+    
+    /**
      * 已完成
      */
-    COMPLETED(3, "已完成"),
+    COMPLETED(4, "已完成"),
     
     /**
      * 已取消
      */
-    CANCELLED(4, "已取消");
+    CANCELLED(5, "已取消");
     
     private final Integer code;
     private final String desc;

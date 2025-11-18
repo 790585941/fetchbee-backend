@@ -71,7 +71,7 @@ public class Order {
     private LocalDateTime deadline;
     
     /**
-     * 状态：1-待接单，2-已接单，3-已完成，4-已取消
+     * 状态：1-待接单，2-已接单，3-待确认，4-已完成，5-已取消
      */
     private Integer status;
     
@@ -79,6 +79,11 @@ public class Order {
      * 实际支付金额（超时可能打折）
      */
     private BigDecimal actualReward;
+    
+    /**
+     * 送达时间（接单者标记送达的时间）
+     */
+    private LocalDateTime deliverTime;
     
     /**
      * 完成时间

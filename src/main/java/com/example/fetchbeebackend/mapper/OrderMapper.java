@@ -45,6 +45,11 @@ public interface OrderMapper {
     List<Order> findByReceiverId(@Param("receiverId") Long receiverId);
     
     /**
+     * 查询待确认且超过指定时间的订单列表（用于自动确认）
+     */
+    List<Order> findDeliveredOrdersBeforeTime(@Param("beforeTime") LocalDateTime beforeTime);
+    
+    /**
      * 更新订单状态
      */
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
@@ -53,6 +58,11 @@ public interface OrderMapper {
      * 接单（更新接单者ID和状态）
      */
     int acceptOrder(@Param("id") Long id, @Param("receiverId") Long receiverId);
+    
+    /**
+     * 标记送达（更新状态为待确认）
+     */
+    int deliverOrder(@Param("id") Long id, @Param("deliverTime") LocalDateTime deliverTime);
     
     /**
      * 完成订单

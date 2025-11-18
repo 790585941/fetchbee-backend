@@ -57,13 +57,43 @@ public class OrderController {
     }
     
     /**
-     * 完成订单
+     * 标记送达（接单者操作）
      */
+    @PostMapping("/{orderId}/deliver")
+    public Result<Void> deliverOrder(HttpServletRequest request,
+                                     @PathVariable Long orderId) {
+        Long userId = (Long) request.getAttribute("userId");
+        log.info("标记送达请求：userId={}, orderId={}", userId, orderId);
+        
+        orderService.deliverOrder(orderId, userId);
+        
+        return Result.success("已标记送达，等待发布者确认", null);
+    }
+    
+    /**
+     * 确认收货（发布者操作）
+     */
+    @PostMapping("/{orderId}/confirm")
+    public Result<Void> confirmOrder(HttpServletRequest request,
+                                     @PathVariable Long orderId) {
+        Long userId = (Long) request.getAttribute("userId");
+        log.info("确认收货请求：userId={}, orderId={}", userId, orderId);
+        
+        orderService.confirmOrder(orderId, userId);
+        
+        return Result.success("订单已完成", null);
+    }
+    
+    /**
+     * 完成订单（已废弃，保留兼容性）
+     * @deprecated 使用 deliverOrder 和 confirmOrder 替代
+     */
+    @Deprecated
     @PostMapping("/{orderId}/complete")
     public Result<Void> completeOrder(HttpServletRequest request,
                                       @PathVariable Long orderId) {
         Long userId = (Long) request.getAttribute("userId");
-        log.info("完成订单请求：userId={}, orderId={}", userId, orderId);
+        log.info("完成订单请求（已废弃）：userId={}, orderId={}", userId, orderId);
         
         orderService.completeOrder(orderId, userId);
         
