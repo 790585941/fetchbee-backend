@@ -24,7 +24,12 @@ public enum NotificationType {
      * 订单已自动确认（通知发布者）
      */
     ORDER_AUTO_CONFIRMED("ORDER_AUTO_CONFIRMED", "订单已自动确认"),
-    
+
+    /**
+     * 订单已过期（通知发布者）
+     */
+    ORDER_EXPIRED("ORDER_EXPIRED", "订单已过期"),
+
     /**
      * 系统通知
      */

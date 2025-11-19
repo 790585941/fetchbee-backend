@@ -48,7 +48,12 @@ public interface OrderMapper {
      * 查询待确认且超过指定时间的订单列表（用于自动确认）
      */
     List<Order> findDeliveredOrdersBeforeTime(@Param("beforeTime") LocalDateTime beforeTime);
-    
+
+    /**
+     * 查询过期未接单的订单列表
+     */
+    List<Order> findExpiredPendingOrders(@Param("now") LocalDateTime now);
+
     /**
      * 更新订单状态
      */
