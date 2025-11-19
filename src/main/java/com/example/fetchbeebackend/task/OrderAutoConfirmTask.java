@@ -1,8 +1,10 @@
 package com.example.fetchbeebackend.task;
 
 import com.example.fetchbeebackend.entity.Order;
+import com.example.fetchbeebackend.enums.NotificationType;
 import com.example.fetchbeebackend.mapper.OrderMapper;
 import com.example.fetchbeebackend.service.BalanceService;
+import com.example.fetchbeebackend.service.NotificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,6 +28,9 @@ public class OrderAutoConfirmTask {
     
     @Autowired
     private BalanceService balanceService;
+    
+    @Autowired
+    private NotificationService notificationService;
     
     /**
      * 自动确认超时订单
@@ -79,6 +84,24 @@ public class OrderAutoConfirmTask {
                     // 给接单者转账
                     balanceService.transfer(order.getReceiverId(), actualReward, order.getId(), 
                             "完成订单收入（自动确认）：" + order.getOrderNo() + (isOvertime ? "（超时）" : ""));
+                    
+                    // 通知发布者：订单已自动确认
+                    notificationService.createNotification(
+                        order.getPublisherId(),
+                        NotificationType.ORDER_AUTO_CONFIRMED,
+                        "订单已自动确认",
+                        "订单【" + order.getOrderNo() + "】已自动确认完成",
+                        order.getId()
+                    );
+                    
+                    // 通知接单者：订单已完成，报酬已到账
+                    notificationService.createNotification(
+                        order.getReceiverId(),
+                        NotificationType.ORDER_COMPLETED,
+                        "订单已完成",
+                        "订单【" + order.getOrderNo() + "】已自动确认完成，报酬 ¥" + actualReward + " 已到账" + (isOvertime ? "（超时）" : ""),
+                        order.getId()
+                    );
                     
                     log.info("自动确认订单成功：orderId={}, orderNo={}, receiverId={}, actualReward={}, isOvertime={}", 
                             order.getId(), order.getOrderNo(), order.getReceiverId(), actualReward, isOvertime);

@@ -4,6 +4,7 @@ import com.example.fetchbeebackend.common.ResultCode;
 import com.example.fetchbeebackend.dto.CreateOrderRequest;
 import com.example.fetchbeebackend.entity.Order;
 import com.example.fetchbeebackend.entity.User;
+import com.example.fetchbeebackend.enums.NotificationType;
 import com.example.fetchbeebackend.enums.OrderStatus;
 import com.example.fetchbeebackend.exception.BusinessException;
 import com.example.fetchbeebackend.mapper.OrderMapper;
@@ -37,6 +38,9 @@ public class OrderService {
     
     @Autowired
     private BalanceService balanceService;
+    
+    @Autowired
+    private NotificationService notificationService;
     
     /**
      * 发布订单
@@ -128,6 +132,18 @@ public class OrderService {
             throw new BusinessException("接单失败，订单可能已被他人接单");
         }
         
+        // 5. 通知发布者：订单已被接单
+        User receiver = userMapper.findById(receiverId);
+        if (receiver != null) {
+            notificationService.createNotification(
+                order.getPublisherId(),
+                NotificationType.ORDER_ACCEPTED,
+                "订单已被接单",
+                "您的订单【" + order.getOrderNo() + "】已被 " + receiver.getUsername() + " 接单",
+                orderId
+            );
+        }
+        
         log.info("接单成功：orderId={}, receiverId={}", orderId, receiverId);
     }
     
@@ -157,6 +173,15 @@ public class OrderService {
         if (result <= 0) {
             throw new BusinessException("标记送达失败");
         }
+        
+        // 5. 通知发布者：快递已送达
+        notificationService.createNotification(
+            order.getPublisherId(),
+            NotificationType.ORDER_DELIVERED,
+            "快递已送达",
+            "您的快递已送达，请确认收货",
+            orderId
+        );
         
         log.info("标记送达成功：orderId={}, receiverId={}", orderId, receiverId);
     }
@@ -206,6 +231,15 @@ public class OrderService {
         // 6. 给接单者转账
         balanceService.transfer(order.getReceiverId(), actualReward, orderId, 
                 "完成订单收入：" + order.getOrderNo() + (isOvertime ? "（超时）" : ""));
+        
+        // 7. 通知接单者：订单已完成，报酬已到账
+        notificationService.createNotification(
+            order.getReceiverId(),
+            NotificationType.ORDER_COMPLETED,
+            "订单已完成",
+            "订单【" + order.getOrderNo() + "】已完成，报酬 ¥" + actualReward + " 已到账" + (isOvertime ? "（超时）" : ""),
+            orderId
+        );
         
         log.info("确认收货成功：orderId={}, publisherId={}, receiverId={}, actualReward={}, isOvertime={}", 
                 orderId, publisherId, order.getReceiverId(), actualReward, isOvertime);
