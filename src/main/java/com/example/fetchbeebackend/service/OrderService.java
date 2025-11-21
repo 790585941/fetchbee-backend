@@ -125,14 +125,19 @@ public class OrderService {
         if (order.getPublisherId().equals(receiverId)) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "不能接自己发布的订单");
         }
-        
-        // 4. 接单（更新订单状态和接单者ID）
+
+        // 4. 检查订单是否已过期
+        if (LocalDateTime.now().isAfter(order.getDeadline())) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "订单已过期，无法接单");
+        }
+
+        // 5. 接单（更新订单状态和接单者ID）
         int result = orderMapper.acceptOrder(orderId, receiverId);
         if (result <= 0) {
             throw new BusinessException("接单失败，订单可能已被他人接单");
         }
         
-        // 5. 通知发布者：订单已被接单
+        // 6. 通知发布者：订单已被接单
         User receiver = userMapper.findById(receiverId);
         if (receiver != null) {
             notificationService.createNotification(

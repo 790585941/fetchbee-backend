@@ -34,9 +34,9 @@ public class OrderExpireTask {
 
     /**
      * 自动取消过期订单
-     * 每小时执行一次
+     * 每10分钟执行一次
      */
-    @Scheduled(cron = "0 0 * * * ?")
+    @Scheduled(cron = "0 */10 * * * ?")
     @Transactional(rollbackFor = Exception.class)
     public void expireOrders() {
         log.info("开始执行订单过期任务");
