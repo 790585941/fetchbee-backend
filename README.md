@@ -4,6 +4,7 @@
 
 ## 系统效果图
 ![登录页面](./docs/images/Login.png)
+![首页](./docs/images/Dashboard.png)
 ![订单详情页面](./docs/images/OrderDetails.png)
 
 ## 技术栈
