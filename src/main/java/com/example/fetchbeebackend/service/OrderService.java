@@ -52,8 +52,13 @@ public class OrderService {
         if (publisher == null) {
             throw new BusinessException(ResultCode.USER_NOT_FOUND, "用户不存在");
         }
-        
-        // 2. 检查余额是否充足
+
+        // 2. 检查是否已完成学生认证
+        if (publisher.getVerificationStatus() == null || publisher.getVerificationStatus() != 2) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "请先学生认证");
+        }
+
+        // 3. 检查余额是否充足
         if (publisher.getBalance().compareTo(request.getReward()) < 0) {
             throw new BusinessException(ResultCode.INSUFFICIENT_BALANCE, 
                     "余额不足，当前余额：" + publisher.getBalance() + "元");
@@ -126,28 +131,34 @@ public class OrderService {
             throw new BusinessException(ResultCode.PARAM_ERROR, "不能接自己发布的订单");
         }
 
-        // 4. 检查订单是否已过期
+        // 4. 检查接单者是否已完成学生认证
+        User receiver = userMapper.findById(receiverId);
+        if (receiver == null) {
+            throw new BusinessException(ResultCode.USER_NOT_FOUND, "用户不存在");
+        }
+        if (receiver.getVerificationStatus() == null || receiver.getVerificationStatus() != 2) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "请先学生认证");
+        }
+
+        // 5. 检查订单是否已过期
         if (LocalDateTime.now().isAfter(order.getDeadline())) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "订单已过期，无法接单");
         }
 
-        // 5. 接单（更新订单状态和接单者ID）
+        // 6. 接单（更新订单状态和接单者ID）
         int result = orderMapper.acceptOrder(orderId, receiverId);
         if (result <= 0) {
             throw new BusinessException("接单失败，订单可能已被他人接单");
         }
-        
-        // 6. 通知发布者：订单已被接单
-        User receiver = userMapper.findById(receiverId);
-        if (receiver != null) {
-            notificationService.createNotification(
-                order.getPublisherId(),
-                NotificationType.ORDER_ACCEPTED,
-                "订单已被接单",
-                "您的订单【" + order.getOrderNo() + "】已被 " + receiver.getUsername() + " 接单",
-                orderId
-            );
-        }
+
+        // 7. 通知发布者：订单已被接单
+        notificationService.createNotification(
+            order.getPublisherId(),
+            NotificationType.ORDER_ACCEPTED,
+            "订单已被接单",
+            "您的订单【" + order.getOrderNo() + "】已被 " + receiver.getUsername() + " 接单",
+            orderId
+        );
         
         log.info("接单成功：orderId={}, receiverId={}", orderId, receiverId);
     }

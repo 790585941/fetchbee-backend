@@ -56,12 +56,37 @@ public class User {
      * 状态：1-正常，0-禁用
      */
     private Integer status;
-    
+
+    /**
+     * 角色：0-普通用户，1-管理员
+     */
+    private Integer role;
+
+    /**
+     * 认证状态：0-未认证，1-待审核，2-已认证，3-审核不通过
+     */
+    private Integer verificationStatus;
+
+    /**
+     * 学生证照片URL
+     */
+    private String verificationImage;
+
+    /**
+     * 认证审核时间
+     */
+    private LocalDateTime verificationTime;
+
+    /**
+     * 审核备注（拒绝原因等）
+     */
+    private String verificationRemark;
+
     /**
      * 创建时间
      */
     private LocalDateTime createTime;
-    
+
     /**
      * 更新时间
      */

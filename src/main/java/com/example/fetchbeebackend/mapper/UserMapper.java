@@ -41,5 +41,21 @@ public interface UserMapper {
      * 更新余额
      */
     int updateBalance(@Param("id") Long id, @Param("balance") BigDecimal balance);
+
+    /**
+     * 提交学生认证
+     */
+    int updateVerificationSubmit(@Param("id") Long id, @Param("verificationImage") String verificationImage);
+
+    /**
+     * 审核学生认证
+     */
+    int updateVerificationReview(@Param("id") Long id, @Param("verificationStatus") Integer verificationStatus,
+                                  @Param("verificationRemark") String verificationRemark);
+
+    /**
+     * 根据认证状态查询用户列表
+     */
+    java.util.List<User> findByVerificationStatus(@Param("verificationStatus") Integer verificationStatus);
 }
 

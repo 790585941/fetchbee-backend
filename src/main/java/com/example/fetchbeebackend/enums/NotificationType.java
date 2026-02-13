@@ -31,6 +31,16 @@ public enum NotificationType {
     ORDER_EXPIRED("ORDER_EXPIRED", "订单已过期"),
 
     /**
+     * 维权申请已提交（通知对方）
+     */
+    RIGHTS_APPLIED("RIGHTS_APPLIED", "维权申请已提交"),
+
+    /**
+     * 维权审核完成（通知双方）
+     */
+    RIGHTS_REVIEWED("RIGHTS_REVIEWED", "维权审核完成"),
+
+    /**
      * 系统通知
      */
     SYSTEM("SYSTEM", "系统通知");

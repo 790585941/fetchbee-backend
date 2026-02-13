@@ -94,7 +94,47 @@ public class Order {
      * 取消原因
      */
     private String cancelReason;
-    
+
+    /**
+     * 维权状态：0-无维权，1-维权中（待审核），2-维权通过，3-维权不通过
+     */
+    private Integer rightsStatus;
+
+    /**
+     * 维权申请人：publisher-发布者，receiver-接单者
+     */
+    private String rightsApplicant;
+
+    /**
+     * 维权描述
+     */
+    private String rightsDescription;
+
+    /**
+     * 维权照片凭证
+     */
+    private String rightsImage;
+
+    /**
+     * 维权申请时间
+     */
+    private LocalDateTime rightsApplyTime;
+
+    /**
+     * 维权审核时间
+     */
+    private LocalDateTime rightsReviewTime;
+
+    /**
+     * 审核备注
+     */
+    private String rightsRemark;
+
+    /**
+     * 资金流向：publisher-发布者，receiver-接单者（仅在接单者维权通过时使用）
+     */
+    private String rightsFundTo;
+
     /**
      * 创建时间
      */

@@ -13,6 +13,11 @@
         <result column="balance" property="balance"/>
         <result column="avatar" property="avatar"/>
         <result column="status" property="status"/>
+        <result column="role" property="role"/>
+        <result column="verification_status" property="verificationStatus"/>
+        <result column="verification_image" property="verificationImage"/>
+        <result column="verification_time" property="verificationTime"/>
+        <result column="verification_remark" property="verificationRemark"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
@@ -54,6 +59,23 @@
     <update id="updateBalance">
         UPDATE user SET balance = #{balance} WHERE id = #{id}
     </update>
-    
+
+    <!-- 提交学生认证 -->
+    <update id="updateVerificationSubmit">
+        UPDATE user SET verification_status = 1, verification_image = #{verificationImage} WHERE id = #{id}
+    </update>
+
+    <!-- 审核学生认证 -->
+    <update id="updateVerificationReview">
+        UPDATE user SET verification_status = #{verificationStatus}, verification_time = NOW(),
+                        verification_remark = #{verificationRemark}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据认证状态查询用户列表 -->
+    <select id="findByVerificationStatus" resultMap="UserResultMap">
+        SELECT * FROM user WHERE verification_status = #{verificationStatus}
+    </select>
+
 </mapper>
 

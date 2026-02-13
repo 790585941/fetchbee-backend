@@ -21,6 +21,14 @@
         <result column="deliver_time" property="deliverTime"/>
         <result column="complete_time" property="completeTime"/>
         <result column="cancel_reason" property="cancelReason"/>
+        <result column="rights_status" property="rightsStatus"/>
+        <result column="rights_applicant" property="rightsApplicant"/>
+        <result column="rights_description" property="rightsDescription"/>
+        <result column="rights_image" property="rightsImage"/>
+        <result column="rights_apply_time" property="rightsApplyTime"/>
+        <result column="rights_review_time" property="rightsReviewTime"/>
+        <result column="rights_remark" property="rightsRemark"/>
+        <result column="rights_fund_to" property="rightsFundTo"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
@@ -112,6 +120,34 @@
         SELECT * FROM `order`
         WHERE status = 1 AND deadline &lt; #{now}
         ORDER BY deadline ASC
+    </select>
+
+    <!-- 提交维权申请 -->
+    <update id="submitRightsProtection">
+        UPDATE `order`
+        SET rights_status = 1,
+            rights_applicant = #{rightsApplicant},
+            rights_description = #{rightsDescription},
+            rights_image = #{rightsImage},
+            rights_apply_time = #{rightsApplyTime}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 审核维权申请 -->
+    <update id="reviewRightsProtection">
+        UPDATE `order`
+        SET rights_status = #{rightsStatus},
+            rights_remark = #{rightsRemark},
+            rights_fund_to = #{rightsFundTo},
+            rights_review_time = #{rightsReviewTime}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 查询待审核的维权订单列表 -->
+    <select id="findPendingRightsProtectionOrders" resultMap="OrderResultMap">
+        SELECT * FROM `order`
+        WHERE rights_status = 1
+        ORDER BY rights_apply_time DESC
     </select>
 
 </mapper>

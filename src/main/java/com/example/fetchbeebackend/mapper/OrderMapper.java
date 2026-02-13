@@ -80,5 +80,28 @@ public interface OrderMapper {
      * 取消订单
      */
     int cancelOrder(@Param("id") Long id, @Param("cancelReason") String cancelReason);
+
+    /**
+     * 提交维权申请
+     */
+    int submitRightsProtection(@Param("id") Long id,
+                               @Param("rightsApplicant") String rightsApplicant,
+                               @Param("rightsDescription") String rightsDescription,
+                               @Param("rightsImage") String rightsImage,
+                               @Param("rightsApplyTime") LocalDateTime rightsApplyTime);
+
+    /**
+     * 审核维权申请
+     */
+    int reviewRightsProtection(@Param("id") Long id,
+                               @Param("rightsStatus") Integer rightsStatus,
+                               @Param("rightsRemark") String rightsRemark,
+                               @Param("rightsFundTo") String rightsFundTo,
+                               @Param("rightsReviewTime") LocalDateTime rightsReviewTime);
+
+    /**
+     * 查询待审核的维权订单列表
+     */
+    List<Order> findPendingRightsProtectionOrders();
 }
 
