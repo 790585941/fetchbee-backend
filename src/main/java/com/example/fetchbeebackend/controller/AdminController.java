@@ -4,13 +4,17 @@ import com.example.fetchbeebackend.common.Result;
 import com.example.fetchbeebackend.common.ResultCode;
 import com.example.fetchbeebackend.dto.ReviewVerificationRequest;
 import com.example.fetchbeebackend.dto.ReviewRightsProtectionRequest;
+import com.example.fetchbeebackend.dto.CreateAnnouncementRequest;
+import com.example.fetchbeebackend.dto.UpdateAnnouncementRequest;
 import com.example.fetchbeebackend.entity.User;
 import com.example.fetchbeebackend.exception.BusinessException;
 import com.example.fetchbeebackend.mapper.UserMapper;
 import com.example.fetchbeebackend.service.VerificationService;
 import com.example.fetchbeebackend.service.RightsProtectionService;
+import com.example.fetchbeebackend.service.AnnouncementService;
 import com.example.fetchbeebackend.vo.VerificationRecordVO;
 import com.example.fetchbeebackend.vo.RightsProtectionVO;
+import com.example.fetchbeebackend.vo.AnnouncementVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +36,9 @@ public class AdminController {
 
     @Autowired
     private RightsProtectionService rightsProtectionService;
+
+    @Autowired
+    private AnnouncementService announcementService;
 
     @Autowired
     private UserMapper userMapper;
@@ -101,5 +108,57 @@ public class AdminController {
                 adminId, orderId, reviewRequest.getRightsStatus());
         rightsProtectionService.reviewRightsProtection(orderId, reviewRequest);
         return Result.success("审核成功", null);
+    }
+
+    /**
+     * 创建公告
+     */
+    @PostMapping("/announcements")
+    public Result<Void> createAnnouncement(HttpServletRequest request,
+                                           @Valid @RequestBody CreateAnnouncementRequest createRequest) {
+        Long adminId = (Long) request.getAttribute("userId");
+        checkAdminRole(adminId);
+        log.info("管理员创建公告：adminId={}, title={}", adminId, createRequest.getTitle());
+        announcementService.createAnnouncement(createRequest, adminId);
+        return Result.success("创建公告成功", null);
+    }
+
+    /**
+     * 更新公告
+     */
+    @PutMapping("/announcements/{id}")
+    public Result<Void> updateAnnouncement(HttpServletRequest request,
+                                           @PathVariable Long id,
+                                           @Valid @RequestBody UpdateAnnouncementRequest updateRequest) {
+        Long adminId = (Long) request.getAttribute("userId");
+        checkAdminRole(adminId);
+        log.info("管理员更新公告：adminId={}, announcementId={}", adminId, id);
+        announcementService.updateAnnouncement(id, updateRequest);
+        return Result.success("更新公告成功", null);
+    }
+
+    /**
+     * 删除公告（逻辑删除）
+     */
+    @DeleteMapping("/announcements/{id}")
+    public Result<Void> deleteAnnouncement(HttpServletRequest request,
+                                           @PathVariable Long id) {
+        Long adminId = (Long) request.getAttribute("userId");
+        checkAdminRole(adminId);
+        log.info("管理员删除公告：adminId={}, announcementId={}", adminId, id);
+        announcementService.deleteAnnouncement(id);
+        return Result.success("删除公告成功", null);
+    }
+
+    /**
+     * 查询所有公告（包含已下架）
+     */
+    @GetMapping("/announcements")
+    public Result<List<AnnouncementVO>> getAllAnnouncements(HttpServletRequest request) {
+        Long adminId = (Long) request.getAttribute("userId");
+        checkAdminRole(adminId);
+        log.info("管理员查询所有公告：adminId={}", adminId);
+        List<AnnouncementVO> announcements = announcementService.getAllAnnouncements();
+        return Result.success(announcements);
     }
 }
