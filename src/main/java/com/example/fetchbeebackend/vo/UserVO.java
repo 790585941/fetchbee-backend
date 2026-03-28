@@ -45,7 +45,33 @@ public class UserVO {
      * 头像
      */
     private String avatar;
-    
+
+    /**
+     * 角色：0-普通用户，1-管理员
+     */
+    private Integer role;
+
+    /**
+     * 认证状态：0-未认证，1-待审核，2-已认证，3-审核不通过
+     */
+    private Integer verificationStatus;
+
+    /**
+     * 学生证照片URL
+     */
+    private String verificationImage;
+
+    /**
+     * 认证审核时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime verificationTime;
+
+    /**
+     * 审核备注（拒绝原因等）
+     */
+    private String verificationRemark;
+
     /**
      * 创建时间
      */

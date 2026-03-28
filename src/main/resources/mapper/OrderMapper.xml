@@ -21,6 +21,10 @@
         <result column="deliver_time" property="deliverTime"/>
         <result column="complete_time" property="completeTime"/>
         <result column="cancel_reason" property="cancelReason"/>
+        <result column="review_status" property="reviewStatus"/>
+        <result column="review_remark" property="reviewRemark"/>
+        <result column="review_time" property="reviewTime"/>
+        <result column="reviewer_id" property="reviewerId"/>
         <result column="rights_status" property="rightsStatus"/>
         <result column="rights_applicant" property="rightsApplicant"/>
         <result column="rights_description" property="rightsDescription"/>
@@ -36,10 +40,10 @@
     <!-- 插入订单 -->
     <insert id="insert" parameterType="com.example.fetchbeebackend.entity.Order"
             useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO `order` (order_no, publisher_id, express_company, pickup_code, description, 
-                            pickup_address, delivery_address, reward, deadline, status)
+        INSERT INTO `order` (order_no, publisher_id, express_company, pickup_code, description,
+                            pickup_address, delivery_address, reward, deadline, status, review_status)
         VALUES (#{orderNo}, #{publisherId}, #{expressCompany}, #{pickupCode}, #{description},
-                #{pickupAddress}, #{deliveryAddress}, #{reward}, #{deadline}, #{status})
+                #{pickupAddress}, #{deliveryAddress}, #{reward}, #{deadline}, #{status}, 0)
     </insert>
     
     <!-- 根据ID查询订单 -->
@@ -149,6 +153,57 @@
         WHERE rights_status = 1
         ORDER BY rights_apply_time DESC
     </select>
+
+    <!-- 根据审核状态查询订单列表 -->
+    <select id="findByReviewStatus" resultMap="OrderResultMap">
+        SELECT * FROM `order`
+        WHERE review_status = #{reviewStatus}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 查询所有订单（管理员视图） -->
+    <select id="findAllForAdmin" resultMap="OrderResultMap">
+        SELECT * FROM `order`
+        ORDER BY
+            CASE
+                WHEN review_status = 0 THEN 0
+                ELSE 1
+            END,
+            create_time DESC
+    </select>
+
+    <!-- 更新订单 -->
+    <update id="update">
+        UPDATE `order`
+        SET order_no = #{orderNo},
+            publisher_id = #{publisherId},
+            receiver_id = #{receiverId},
+            express_company = #{expressCompany},
+            pickup_code = #{pickupCode},
+            description = #{description},
+            pickup_address = #{pickupAddress},
+            delivery_address = #{deliveryAddress},
+            reward = #{reward},
+            deadline = #{deadline},
+            status = #{status},
+            actual_reward = #{actualReward},
+            deliver_time = #{deliverTime},
+            complete_time = #{completeTime},
+            cancel_reason = #{cancelReason},
+            review_status = #{reviewStatus},
+            review_remark = #{reviewRemark},
+            review_time = #{reviewTime},
+            reviewer_id = #{reviewerId},
+            rights_status = #{rightsStatus},
+            rights_applicant = #{rightsApplicant},
+            rights_description = #{rightsDescription},
+            rights_image = #{rightsImage},
+            rights_apply_time = #{rightsApplyTime},
+            rights_review_time = #{rightsReviewTime},
+            rights_remark = #{rightsRemark},
+            rights_fund_to = #{rightsFundTo}
+        WHERE id = #{id}
+    </update>
 
 </mapper>
 

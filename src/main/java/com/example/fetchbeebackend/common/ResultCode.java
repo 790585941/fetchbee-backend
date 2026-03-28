@@ -34,11 +34,14 @@ public class ResultCode {
     
     // 余额不足
     public static final int INSUFFICIENT_BALANCE = 1004;
-    
+
     // Token无效
     public static final int TOKEN_INVALID = 1005;
-    
+
     // Token过期
     public static final int TOKEN_EXPIRED = 1006;
+
+    // 订单不存在
+    public static final int ORDER_NOT_FOUND = 2001;
 }
 

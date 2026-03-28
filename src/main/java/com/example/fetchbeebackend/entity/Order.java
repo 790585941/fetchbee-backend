@@ -96,6 +96,26 @@ public class Order {
     private String cancelReason;
 
     /**
+     * 审核状态：0-待审核，1-已通过，2-已拒绝
+     */
+    private Integer reviewStatus;
+
+    /**
+     * 审核备注（拒绝原因）
+     */
+    private String reviewRemark;
+
+    /**
+     * 审核时间
+     */
+    private LocalDateTime reviewTime;
+
+    /**
+     * 审核人ID
+     */
+    private Long reviewerId;
+
+    /**
      * 维权状态：0-无维权，1-维权中（待审核），2-维权通过，3-维权不通过
      */
     private Integer rightsStatus;

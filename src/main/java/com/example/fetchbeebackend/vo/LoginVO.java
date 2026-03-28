@@ -48,5 +48,15 @@ public class LoginVO {
      * 头像
      */
     private String avatar;
+
+    /**
+     * 角色：0-普通用户，1-管理员
+     */
+    private Integer role;
+
+    /**
+     * 认证状态：0-未认证，1-待审核，2-已认证，3-审核不通过
+     */
+    private Integer verificationStatus;
 }
 

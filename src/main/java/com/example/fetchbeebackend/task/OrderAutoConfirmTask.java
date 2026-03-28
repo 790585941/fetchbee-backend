@@ -58,6 +58,10 @@ public class OrderAutoConfirmTask {
             
             for (Order order : orders) {
                 try {
+                    if (order.getRightsStatus() != null && order.getRightsStatus() == 1) {
+                        log.info("Skip auto-confirm because order is in rights protection: orderId={}", order.getId());
+                        continue;
+                    }
                     // 判断是否超时，计算实际支付金额
                     LocalDateTime now = LocalDateTime.now();
                     BigDecimal actualReward;

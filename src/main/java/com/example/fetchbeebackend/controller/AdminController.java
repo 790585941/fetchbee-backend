@@ -4,6 +4,7 @@ import com.example.fetchbeebackend.common.Result;
 import com.example.fetchbeebackend.common.ResultCode;
 import com.example.fetchbeebackend.dto.ReviewVerificationRequest;
 import com.example.fetchbeebackend.dto.ReviewRightsProtectionRequest;
+import com.example.fetchbeebackend.dto.ReviewOrderRequest;
 import com.example.fetchbeebackend.dto.CreateAnnouncementRequest;
 import com.example.fetchbeebackend.dto.UpdateAnnouncementRequest;
 import com.example.fetchbeebackend.entity.User;
@@ -12,9 +13,12 @@ import com.example.fetchbeebackend.mapper.UserMapper;
 import com.example.fetchbeebackend.service.VerificationService;
 import com.example.fetchbeebackend.service.RightsProtectionService;
 import com.example.fetchbeebackend.service.AnnouncementService;
+import com.example.fetchbeebackend.service.OrderService;
 import com.example.fetchbeebackend.vo.VerificationRecordVO;
 import com.example.fetchbeebackend.vo.RightsProtectionVO;
 import com.example.fetchbeebackend.vo.AnnouncementVO;
+import com.example.fetchbeebackend.vo.OrderVO;
+import com.example.fetchbeebackend.vo.AdminStatsVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +45,9 @@ public class AdminController {
     private AnnouncementService announcementService;
 
     @Autowired
+    private OrderService orderService;
+
+    @Autowired
     private UserMapper userMapper;
 
     /**
@@ -54,6 +61,24 @@ public class AdminController {
         if (user.getRole() == null || user.getRole() != 1) {
             throw new BusinessException(ResultCode.FORBIDDEN, "无权限访问");
         }
+    }
+
+    /**
+     * 获取管理员统计数据
+     */
+    @GetMapping("/stats")
+    public Result<AdminStatsVO> getAdminStats(HttpServletRequest request) {
+        Long adminId = (Long) request.getAttribute("userId");
+        checkAdminRole(adminId);
+        log.info("管理员获取统计数据：adminId={}", adminId);
+
+        AdminStatsVO stats = new AdminStatsVO();
+        stats.setPendingOrders(orderService.getPendingOrdersCount());
+        stats.setPendingVerifications(verificationService.getPendingVerificationsCount());
+        stats.setPendingRights(rightsProtectionService.getPendingRightsCount());
+        stats.setTotalAnnouncements(announcementService.getTotalAnnouncementsCount());
+
+        return Result.success(stats);
     }
 
     /**
@@ -160,5 +185,44 @@ public class AdminController {
         log.info("管理员查询所有公告：adminId={}", adminId);
         List<AnnouncementVO> announcements = announcementService.getAllAnnouncements();
         return Result.success(announcements);
+    }
+
+    /**
+     * 获取待审核订单列表
+     */
+    @GetMapping("/orders/pending")
+    public Result<List<OrderVO>> getPendingOrders(HttpServletRequest request) {
+        Long adminId = (Long) request.getAttribute("userId");
+        checkAdminRole(adminId);
+        log.info("管理员获取待审核订单列表：adminId={}", adminId);
+        List<OrderVO> orders = orderService.getPendingOrders();
+        return Result.success(orders);
+    }
+
+    /**
+     * 获取所有订单列表（管理员视图）
+     */
+    @GetMapping("/orders")
+    public Result<List<OrderVO>> getAllOrders(HttpServletRequest request) {
+        Long adminId = (Long) request.getAttribute("userId");
+        checkAdminRole(adminId);
+        log.info("管理员获取所有订单列表：adminId={}", adminId);
+        List<OrderVO> orders = orderService.getAllOrdersForAdmin();
+        return Result.success(orders);
+    }
+
+    /**
+     * 审核订单
+     */
+    @PutMapping("/orders/{orderId}/review")
+    public Result<Void> reviewOrder(HttpServletRequest request,
+                                    @PathVariable Long orderId,
+                                    @Valid @RequestBody ReviewOrderRequest reviewRequest) {
+        Long adminId = (Long) request.getAttribute("userId");
+        checkAdminRole(adminId);
+        log.info("管理员审核订单：adminId={}, orderId={}, status={}",
+                adminId, orderId, reviewRequest.getReviewStatus());
+        orderService.reviewOrder(orderId, reviewRequest, adminId);
+        return Result.success("审核成功", null);
     }
 }

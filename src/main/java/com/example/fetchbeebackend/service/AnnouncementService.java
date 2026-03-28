@@ -97,6 +97,14 @@ public class AnnouncementService {
     }
 
     /**
+     * 获取公告总数
+     */
+    public Integer getTotalAnnouncementsCount() {
+        List<AnnouncementVO> announcements = announcementMapper.findAll();
+        return announcements != null ? announcements.size() : 0;
+    }
+
+    /**
      * 查询最新的已发布公告（普通用户用）
      */
     public AnnouncementVO getLatestPublishedAnnouncement() {

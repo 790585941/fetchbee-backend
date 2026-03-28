@@ -2,6 +2,7 @@ package com.example.fetchbeebackend.service;
 
 import com.example.fetchbeebackend.common.ResultCode;
 import com.example.fetchbeebackend.dto.CreateOrderRequest;
+import com.example.fetchbeebackend.dto.ReviewOrderRequest;
 import com.example.fetchbeebackend.entity.Order;
 import com.example.fetchbeebackend.entity.User;
 import com.example.fetchbeebackend.enums.NotificationType;
@@ -93,7 +94,7 @@ public class OrderService {
         order.setDeliveryAddress(publisher.getAddress()); // 使用发布者的地址
         order.setReward(request.getReward());
         order.setDeadline(request.getDeadline());
-        order.setStatus(OrderStatus.PENDING.getCode());
+        order.setStatus(OrderStatus.PENDING_REVIEW.getCode());
         
         int result = orderMapper.insert(order);
         if (result <= 0) {
@@ -173,6 +174,8 @@ public class OrderService {
         if (order == null) {
             throw new BusinessException(ResultCode.NOT_FOUND, "订单不存在");
         }
+
+        assertNotInRightsProtection(order);
         
         // 2. 检查订单状态
         if (!order.getStatus().equals(OrderStatus.ACCEPTED.getCode())) {
@@ -212,6 +215,8 @@ public class OrderService {
         if (order == null) {
             throw new BusinessException(ResultCode.NOT_FOUND, "订单不存在");
         }
+
+        assertNotInRightsProtection(order);
         
         // 2. 检查订单状态
         if (!order.getStatus().equals(OrderStatus.DELIVERED.getCode())) {
@@ -273,6 +278,8 @@ public class OrderService {
         if (order == null) {
             throw new BusinessException(ResultCode.NOT_FOUND, "订单不存在");
         }
+
+        assertNotInRightsProtection(order);
         
         // 2. 检查订单状态
         if (!order.getStatus().equals(OrderStatus.ACCEPTED.getCode())) {
@@ -414,8 +421,12 @@ public class OrderService {
             }
         }
         
-        // 设置状态描述
-        vo.setStatusDesc(getStatusDesc(order.getStatus()));
+        // 维权中的订单统一显示为“维权中”，并冻结流程状态
+        if (order.getRightsStatus() != null && order.getRightsStatus() == 1) {
+            vo.setStatusDesc("维权中");
+        } else {
+            vo.setStatusDesc(getStatusDesc(order.getStatus()));
+        }
         
         // 判断是否超时
         vo.setIsOvertime(LocalDateTime.now().isAfter(order.getDeadline()) 
@@ -451,6 +462,152 @@ public class OrderService {
             }
         }
         return "未知";
+    }
+
+    private void assertNotInRightsProtection(Order order) {
+        if (order.getRightsStatus() != null && order.getRightsStatus() == 1) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "订单维权中，暂不可执行当前操作");
+        }
+    }
+
+    /**
+     * 获取待审核订单列表（管理员）
+     */
+    public List<OrderVO> getPendingOrders() {
+        List<Order> orders = orderMapper.findByReviewStatus(0);
+        return convertToVOListForAdmin(orders);
+    }
+
+    /**
+     * 获取所有订单列表（管理员视图）
+     */
+    public List<OrderVO> getAllOrdersForAdmin() {
+        List<Order> orders = orderMapper.findAllForAdmin();
+        return convertToVOListForAdmin(orders);
+    }
+
+    /**
+     * 审核订单（管理员）
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void reviewOrder(Long orderId, ReviewOrderRequest reviewRequest, Long adminId) {
+        // 1. 查询订单
+        Order order = orderMapper.findById(orderId);
+        if (order == null) {
+            throw new BusinessException(ResultCode.ORDER_NOT_FOUND, "订单不存在");
+        }
+
+        // 2. 检查订单状态
+        if (!order.getStatus().equals(OrderStatus.PENDING_REVIEW.getCode())) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "订单不是待审核状态");
+        }
+
+        // 3. 验证审核状态
+        Integer reviewStatus = reviewRequest.getReviewStatus();
+        if (reviewStatus == null || (reviewStatus != 1 && reviewStatus != 2)) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "审核状态无效");
+        }
+
+        // 4. 如果是拒绝，必须填写拒绝原因
+        if (reviewStatus == 2 && (reviewRequest.getReviewRemark() == null || reviewRequest.getReviewRemark().trim().isEmpty())) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "拒绝订单必须填写原因");
+        }
+
+        // 5. 更新订单审核信息
+        order.setReviewStatus(reviewStatus);
+        order.setReviewRemark(reviewRequest.getReviewRemark());
+        order.setReviewTime(LocalDateTime.now());
+        order.setReviewerId(adminId);
+
+        // 6. 更新订单状态
+        if (reviewStatus == 1) {
+            // 审核通过，订单状态变为待接单
+            order.setStatus(OrderStatus.PENDING.getCode());
+        } else {
+            // 审核拒绝，订单状态变为已拒绝，退还发布者余额
+            order.setStatus(OrderStatus.REJECTED.getCode());
+
+            // 退还发布者余额
+            User publisher = userMapper.findById(order.getPublisherId());
+            if (publisher != null) {
+                balanceService.refund(order.getPublisherId(), order.getReward(),
+                        orderId, "订单审核未通过，退还订单金额");
+            }
+        }
+
+        // 7. 更新订单
+        int result = orderMapper.update(order);
+        if (result <= 0) {
+            throw new BusinessException("审核订单失败");
+        }
+
+        // 8. 发送通知给发布者
+        String notificationTitle;
+        String notificationContent;
+        if (reviewStatus == 1) {
+            notificationTitle = "订单审核通过";
+            notificationContent = "您的订单【" + order.getOrderNo() + "】已通过审核，现已发布到订单大厅";
+        } else {
+            notificationTitle = "订单审核未通过";
+            notificationContent = "您的订单【" + order.getOrderNo() + "】审核未通过，原因：" + reviewRequest.getReviewRemark();
+        }
+
+        notificationService.createNotification(
+                order.getPublisherId(),
+                NotificationType.ORDER_REVIEWED,
+                notificationTitle,
+                notificationContent,
+                orderId
+        );
+
+        log.info("订单审核完成：orderId={}, reviewStatus={}, adminId={}", orderId, reviewStatus, adminId);
+    }
+
+    /**
+     * 获取待审核订单数量
+     */
+    public Integer getPendingOrdersCount() {
+        List<Order> orders = orderMapper.findByReviewStatus(0);
+        return orders != null ? orders.size() : 0;
+    }
+
+    /**
+     * 批量转换为VO列表（管理员视图，不隐藏取件码）
+     */
+    private List<OrderVO> convertToVOListForAdmin(List<Order> orders) {
+        List<OrderVO> voList = new ArrayList<>();
+        for (Order order : orders) {
+            OrderVO vo = new OrderVO();
+            BeanUtils.copyProperties(order, vo);
+
+            // 查询发布者信息
+            User publisher = userMapper.findById(order.getPublisherId());
+            if (publisher != null) {
+                vo.setPublisherName(publisher.getUsername());
+            }
+
+            // 查询接单者信息
+            if (order.getReceiverId() != null) {
+                User receiver = userMapper.findById(order.getReceiverId());
+                if (receiver != null) {
+                    vo.setReceiverName(receiver.getUsername());
+                }
+            }
+
+            // 维权中的订单统一显示为“维权中”
+            if (order.getRightsStatus() != null && order.getRightsStatus() == 1) {
+                vo.setStatusDesc("维权中");
+            } else {
+                vo.setStatusDesc(getStatusDesc(order.getStatus()));
+            }
+
+            // 判断是否超时
+            vo.setIsOvertime(LocalDateTime.now().isAfter(order.getDeadline())
+                    && order.getStatus().equals(OrderStatus.ACCEPTED.getCode()));
+
+            voList.add(vo);
+        }
+        return voList;
     }
 }
 

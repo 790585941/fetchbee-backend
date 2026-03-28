@@ -241,6 +241,14 @@ public class RightsProtectionService {
     }
 
     /**
+     * 获取待审核维权数量
+     */
+    public Integer getPendingRightsCount() {
+        List<Order> orders = orderMapper.findPendingRightsProtectionOrders();
+        return orders != null ? orders.size() : 0;
+    }
+
+    /**
      * 转换为VO
      */
     private RightsProtectionVO convertToVO(Order order) {

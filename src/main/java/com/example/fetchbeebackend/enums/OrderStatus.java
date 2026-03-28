@@ -4,31 +4,41 @@ package com.example.fetchbeebackend.enums;
  * 订单状态枚举
  */
 public enum OrderStatus {
-    
+
     /**
-     * 待接单
+     * 待审核（订单发布后的初始状态）
+     */
+    PENDING_REVIEW(0, "待审核"),
+
+    /**
+     * 待接单（审核通过后）
      */
     PENDING(1, "待接单"),
-    
+
     /**
      * 已接单
      */
     ACCEPTED(2, "已接单"),
-    
+
     /**
      * 待确认（接单者已送达，等待发布者确认）
      */
     DELIVERED(3, "待确认"),
-    
+
     /**
      * 已完成
      */
     COMPLETED(4, "已完成"),
-    
+
     /**
      * 已取消
      */
-    CANCELLED(5, "已取消");
+    CANCELLED(5, "已取消"),
+
+    /**
+     * 已拒绝（审核未通过）
+     */
+    REJECTED(6, "已拒绝");
     
     private final Integer code;
     private final String desc;

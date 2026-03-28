@@ -107,6 +107,16 @@ public class OrderVO {
      * 取消原因
      */
     private String cancelReason;
+
+    /**
+     * 维权状态：0-无维权，1-维权中，2-维权通过，3-维权不通过
+     */
+    private Integer rightsStatus;
+
+    /**
+     * 维权申请方：publisher/receiver
+     */
+    private String rightsApplicant;
     
     /**
      * 创建时间

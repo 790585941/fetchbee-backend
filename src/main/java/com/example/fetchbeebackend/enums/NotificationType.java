@@ -41,6 +41,11 @@ public enum NotificationType {
     RIGHTS_REVIEWED("RIGHTS_REVIEWED", "维权审核完成"),
 
     /**
+     * 订单审核完成（通知发布者）
+     */
+    ORDER_REVIEWED("ORDER_REVIEWED", "订单审核完成"),
+
+    /**
      * 系统通知
      */
     SYSTEM("SYSTEM", "系统通知");

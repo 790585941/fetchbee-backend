@@ -104,7 +104,9 @@ public class UserService {
         loginVO.setAddress(user.getAddress());
         loginVO.setBalance(user.getBalance());
         loginVO.setAvatar(user.getAvatar());
-        
+        loginVO.setRole(user.getRole());
+        loginVO.setVerificationStatus(user.getVerificationStatus());
+
         log.info("用户登录成功：{}", request.getUsername());
         return loginVO;
     }

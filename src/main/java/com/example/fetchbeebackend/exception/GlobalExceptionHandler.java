@@ -8,6 +8,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.stream.Collectors;
 
@@ -17,6 +18,15 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    
+    /**
+     * 请求地址不存在
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public Result<Void> handleNoResourceFound(NoResourceFoundException e) {
+        log.error("未找到接口：{}", e.getResourcePath());
+        return Result.error(ResultCode.NOT_FOUND, "请求接口不存在");
+    }
     
     /**
      * 业务异常

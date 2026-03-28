@@ -103,5 +103,20 @@ public interface OrderMapper {
      * 查询待审核的维权订单列表
      */
     List<Order> findPendingRightsProtectionOrders();
+
+    /**
+     * 根据审核状态查询订单列表
+     */
+    List<Order> findByReviewStatus(@Param("reviewStatus") Integer reviewStatus);
+
+    /**
+     * 查询所有订单（管理员视图）
+     */
+    List<Order> findAllForAdmin();
+
+    /**
+     * 更新订单
+     */
+    int update(Order order);
 }
 

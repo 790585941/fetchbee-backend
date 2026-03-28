@@ -96,4 +96,12 @@ public class VerificationService {
             return vo;
         }).collect(Collectors.toList());
     }
+
+    /**
+     * 获取待审核认证数量
+     */
+    public Integer getPendingVerificationsCount() {
+        List<User> users = userMapper.findByVerificationStatus(1);
+        return users != null ? users.size() : 0;
+    }
 }
